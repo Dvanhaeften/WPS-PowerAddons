@@ -60,6 +60,7 @@ function Get-WPSLastExecution {
 function Get-WPSToolConfirmationDetails {
     param($Tool)
     switch ($Tool.Id) {
+        'powershell-command' { return 'De opdracht draait zonder administratorverhoging onder uw huidige account. Opdrachten kunnen bestanden en instellingen wijzigen; gebruik geen opdrachten van onbekende herkomst.' }
         'sap-localgui-repair' { return 'Sluit SAP GUI en Microsoft Excel zelf voordat u doorgaat; WPS-PowerAddons sluit deze programma''s niet.' }
         'teams-cache-cleanup' { return 'Teams moet vooraf handmatig zijn afgesloten. WPS-PowerAddons sluit Teams niet en raakt alleen gedetecteerde cachemappen aan.' }
         'onedrive-reset' { return 'Als OneDrive actief is, vraagt de tool apart toestemming voordat alleen het OneDrive-proces wordt gestopt.' }
@@ -71,6 +72,69 @@ function Get-WPSToolConfirmationDetails {
         'restart-windows-update-services' { return 'Windows Update-services worden herstart; SoftwareDistribution en gebruikersbestanden blijven onaangeroerd.' }
         default { return 'Controleer de toolbeschrijving en sluit alleen applicaties die daarin expliciet worden genoemd. Er worden geen applicaties automatisch gesloten.' }
     }
+}
+
+function Show-WPSPowerShellCommandDialog {
+    $form = New-Object Windows.Forms.Form
+    $form.Text = 'PowerShell-opdracht uitvoeren'
+    $form.Size = New-Object Drawing.Size(780, 600)
+    $form.MinimumSize = New-Object Drawing.Size(640, 460)
+    $form.StartPosition = 'CenterParent'
+    $form.FormBorderStyle = 'Sizable'
+    $warning = New-Object Windows.Forms.Label
+    $warning.Text = 'Voer alleen opdrachten in die u begrijpt en vertrouwt. De opdracht draait als uw huidige gebruiker, zonder UAC-verhoging. Wijzigingen door de opdracht kunnen niet automatisch ongedaan worden gemaakt; interactieve opdrachten worden niet ondersteund. De opdracht en uitvoer worden niet in het logboek opgeslagen.'
+    $warning.Dock = 'Top'
+    $warning.Height = 74
+    $warning.Padding = New-Object Windows.Forms.Padding(12)
+    $warning.BackColor = [Drawing.Color]::FromArgb(255, 244, 204)
+    $form.Controls.Add($warning)
+    $commandBox = New-Object Windows.Forms.TextBox
+    $commandBox.Multiline = $true
+    $commandBox.AcceptsReturn = $true
+    $commandBox.AcceptsTab = $true
+    $commandBox.ScrollBars = 'Both'
+    $commandBox.WordWrap = $false
+    $commandBox.Dock = 'Fill'
+    $commandBox.Font = New-Object Drawing.Font('Consolas', 10)
+    $commandBox.MaxLength = 50000
+    $form.Controls.Add($commandBox)
+    $confirmation = New-Object Windows.Forms.CheckBox
+    $confirmation.Text = 'Ik heb de opdracht gecontroleerd en wil deze uitvoeren.'
+    $confirmation.AutoSize = $true
+    $confirmation.Dock = 'Left'
+    $confirmation.Padding = New-Object Windows.Forms.Padding(8)
+    $buttons = New-Object Windows.Forms.FlowLayoutPanel
+    $buttons.Dock = 'Bottom'
+    $buttons.Height = 48
+    $buttons.FlowDirection = 'RightToLeft'
+    $run = New-Object Windows.Forms.Button
+    $run.Text = 'Opdracht uitvoeren'
+    $run.AutoSize = $true
+    $run.Enabled = $false
+    $cancel = New-Object Windows.Forms.Button
+    $cancel.Text = 'Annuleren'
+    $cancel.AutoSize = $true
+    $cancel.DialogResult = [Windows.Forms.DialogResult]::Cancel
+    $updateRunState = {
+        $run.Enabled = $confirmation.Checked -and -not [string]::IsNullOrWhiteSpace($commandBox.Text)
+    }.GetNewClosure()
+    $confirmation.Add_CheckedChanged($updateRunState)
+    $commandBox.Add_TextChanged($updateRunState)
+    $run.Add_Click({
+        $form.Tag = $commandBox.Text
+        $form.DialogResult = [Windows.Forms.DialogResult]::OK
+        $form.Close()
+    }.GetNewClosure())
+    $buttons.Controls.AddRange(@($run, $cancel))
+    $form.Controls.Add($buttons)
+    $form.Controls.Add($confirmation)
+    $form.AcceptButton = $run
+    $form.CancelButton = $cancel
+    $form.Tag = $null
+    $form.ShowDialog($script:WPSUi.Form) | Out-Null
+    $selectedCommand = [string]$form.Tag
+    $form.Dispose()
+    return $selectedCommand
 }
 
 function Show-WPSRestartChoice {
@@ -115,10 +179,15 @@ function Start-WPSAsyncTool {
         [Windows.Forms.MessageBox]::Show('Deze tool wordt al uitgevoerd.', 'WPS-PowerAddons', 'OK', 'Information') | Out-Null
         return
     }
+    $commandText = $null
+    if ($Tool.Id -eq 'powershell-command') {
+        $commandText = Show-WPSPowerShellCommandDialog
+        if ([string]::IsNullOrWhiteSpace($commandText)) { return }
+    }
     $adminText = if ($Tool.RequiresAdmin -and -not $ReadOnly) { 'Administratorrechten zijn vereist; Windows toont UAC voor alleen deze tool.' } else { 'Er worden geen administratorrechten gevraagd.' }
     $changeText = if ($ReadOnly) { 'De tool wordt alleen gebruikt om informatie te controleren.' } else { $Tool.Description }
     $restartText = if ($Tool.RestartBehaviour -eq 'None') { 'Een herstart is niet voorzien.' } else { 'Een herstart kan nodig of aanbevolen zijn; deze start nooit automatisch.' }
-    if ($Tool.RequiresConfirmation -or ($Tool.RequiresAdmin -and $script:WPSUi.Settings.ConfirmAdministratorTools)) {
+    if (($Tool.RequiresConfirmation -and $Tool.Id -ne 'powershell-command') -or ($Tool.RequiresAdmin -and $script:WPSUi.Settings.ConfirmAdministratorTools)) {
         $safetyText = Get-WPSToolConfirmationDetails -Tool $Tool
         $message = "Tool: $($Tool.Name)`r`n$changeText`r`n$adminText`r`n$safetyText`r`n$restartText`r`n`r`nDoorgaan?"
         $answer = [Windows.Forms.MessageBox]::Show($message, 'WPS-PowerAddons - Bevestiging', [Windows.Forms.MessageBoxButtons]::YesNo, [Windows.Forms.MessageBoxIcon]::Warning, [Windows.Forms.MessageBoxDefaultButton]::Button2)
@@ -149,7 +218,8 @@ function Start-WPSAsyncTool {
     $powershell.AddScript($loadScript).AddStatement().AddCommand('Invoke-WPSPowerAddonTool').
         AddParameter('Tool', $Tool).AddParameter('RootPath', $script:WPSUi.RootPath).
         AddParameter('LogDirectory', $script:WPSUi.LogDirectory).AddParameter('Settings', $script:WPSUi.Settings).
-        AddParameter('Confirmed').AddParameter('ReadOnly', $ReadOnly) | Out-Null
+        AddParameter('Confirmed').AddParameter('ReadOnly', $ReadOnly).
+        AddParameter('CommandText', $commandText) | Out-Null
     $async = $powershell.BeginInvoke()
     $script:WPSUi.Running[[string]$Tool.Id] = [pscustomobject]@{
         Tool = $Tool; PowerShell = $powershell; Runspace = $runspace; Async = $async; ReadOnly = $ReadOnly

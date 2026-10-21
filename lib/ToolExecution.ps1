@@ -17,6 +17,7 @@ function Invoke-WPSPowerAddonTool {
         [Parameter(Mandatory = $true)][string]$RootPath,
         [Parameter(Mandatory = $true)][string]$LogDirectory,
         [Parameter(Mandatory = $true)]$Settings,
+        [string]$CommandText,
         [switch]$ReadOnly,
         [switch]$Confirmed
     )
@@ -57,6 +58,14 @@ function Invoke-WPSPowerAddonTool {
     $escapedScript = $scriptPath.Replace("'", "''")
     $runner = '$ErrorActionPreference = ''Continue''; & ' + "'" + $escapedScript + "'"
     if ($ReadOnly) { $runner += ' -ReadOnly' }
+    if ($Tool.Id -eq 'powershell-command') {
+        if ([string]::IsNullOrWhiteSpace($CommandText)) {
+            $result = New-WPSToolResult $Tool 7 'ValidationFailed' 'Voer een PowerShell-opdracht in.' $start (Get-Date) $false
+            Write-WPSToolExecutionLog -Result $result -Tool $Tool -LogDirectory $LogDirectory
+            return $result
+        }
+        $runner += " -CommandText '" + $CommandText.Replace("'", "''") + "'"
+    }
     $runner += " *> '$($outputFile.Replace("'", "''"))'; if (`$LASTEXITCODE -is [int]) { exit `$LASTEXITCODE }"
     $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($runner))
     $arguments = '-STA -NoProfile -ExecutionPolicy Bypass -EncodedCommand {0}' -f $encoded
