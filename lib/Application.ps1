@@ -371,6 +371,7 @@ function Show-WPSToolDetails {
 
 function Show-WPSToolList {
     param([string]$Category = '', [string]$Filter = '')
+    $ui = $script:WPSUi
     $script:WPSUi.PageTitle.Text = if ($Category) { $Category } else { 'Alle tools' }
     $panel = $script:WPSUi.Content
     $panel.SuspendLayout()
@@ -415,13 +416,13 @@ function Show-WPSToolList {
     $panel.Controls.Add($flow)
     $render = {
         $flow.Controls.Clear()
-        $activeFilter = [string]$script:WPSUi.ToolFilter.SelectedItem
+        $activeFilter = [string]$ui.ToolFilter.SelectedItem
         $activeCategory = $Category
-        if ($script:WPSUi.CategoryFilter.SelectedIndex -gt 0) { $activeCategory = [string]$script:WPSUi.CategoryFilter.SelectedItem }
+        if ($ui.CategoryFilter.SelectedIndex -gt 0) { $activeCategory = [string]$ui.CategoryFilter.SelectedItem }
         $tools = Get-WPSFilteredTools -Category $activeCategory -Filter $activeFilter
         foreach ($tool in $tools) {
             $card = New-Object Windows.Forms.Panel
-            $compact = ($script:WPSUi.ViewMode.SelectedItem -eq 'Compacte lijst')
+            $compact = ($ui.ViewMode.SelectedItem -eq 'Compacte lijst')
             $card.Width = if ($compact) { 790 } else { 300 }
             $card.Height = if ($compact) { 74 } else { 168 }
             $card.Margin = New-Object Windows.Forms.Padding(8)
@@ -958,6 +959,8 @@ function Start-WPSApplication {
     $form.BackColor = [Drawing.Color]::FromArgb(244, 246, 249)
     $form.Font = New-Object Drawing.Font('Segoe UI', 9)
     $script:WPSUi.Form = $form
+    $form.Tag = $script:WPSUi
+    $ui = $script:WPSUi
     $main = New-Object Windows.Forms.Panel
     $main.Name = 'WPSMainContent'
     $main.Dock = 'Fill'
@@ -985,8 +988,9 @@ function Start-WPSApplication {
         $button.FlatAppearance.BorderSize = 0; $button.TextAlign = 'MiddleLeft'
         $button.BackColor = [Drawing.Color]::FromArgb(23, 32, 51); $button.ForeColor = [Drawing.Color]::White
         $name = $page[1]
+        $button.Name = 'WPSNavigation_{0}' -f $name.Replace(' ', '_')
         $button.Add_Click({
-            $script:WPSUi.CurrentPage = $name
+            $ui.CurrentPage = $name
             switch ($name) {
                 'Dashboard' { Show-WPSDashboard }
                 'Alle tools' { Show-WPSToolList }
