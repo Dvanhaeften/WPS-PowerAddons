@@ -1,5 +1,10 @@
 # Wijzigingslog
 
+## Niet-uitgebrachte verbeteringen
+
+- Herstelde de dashboardindeling zodat het hoofdvenster naast de navigatiebalk staat en niet erachter wordt getekend.
+- Toegevoegd: bevestigde PowerShell-opdrachten uitvoeren als huidige gebruiker.
+
 ## 1.0.0
 
 - Eerste release van WPS-PowerAddons met Nederlandstalig Windows Forms-dashboard.

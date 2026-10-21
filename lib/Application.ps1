@@ -958,7 +958,12 @@ function Start-WPSApplication {
     $form.BackColor = [Drawing.Color]::FromArgb(244, 246, 249)
     $form.Font = New-Object Drawing.Font('Segoe UI', 9)
     $script:WPSUi.Form = $form
+    $main = New-Object Windows.Forms.Panel
+    $main.Name = 'WPSMainContent'
+    $main.Dock = 'Fill'
+    $form.Controls.Add($main)
     $sidebar = New-Object Windows.Forms.Panel
+    $sidebar.Name = 'WPSSidebar'
     $sidebar.Dock = 'Left'; $sidebar.Width = 220; $sidebar.BackColor = [Drawing.Color]::FromArgb(23, 32, 51)
     $form.Controls.Add($sidebar)
     $brand = New-Object Windows.Forms.Label
@@ -998,7 +1003,6 @@ function Start-WPSApplication {
         }.GetNewClosure())
         $navPanel.Controls.Add($button)
     }
-    $main = New-Object Windows.Forms.Panel; $main.Dock = 'Fill'; $form.Controls.Add($main)
     $header = New-Object Windows.Forms.Panel; $header.Dock = 'Top'; $header.Height = 98; $header.BackColor = [Drawing.Color]::White
     $main.Controls.Add($header)
     $title = New-Object Windows.Forms.Label

@@ -11,9 +11,19 @@ $timer.Interval = 1600
 $timer.Add_Tick({
     $timer.Stop()
     $form = [Windows.Forms.Application]::OpenForms | Where-Object Text -eq 'WPS-PowerAddons' | Select-Object -First 1
-    if ($form) { $form.Close() }
+    if (-not $form) { throw 'WPS-PowerAddons hoofdvenster is niet geopend.' }
+    $sidebar = $form.Controls | Where-Object Name -eq 'WPSSidebar' | Select-Object -First 1
+    $main = $form.Controls | Where-Object Name -eq 'WPSMainContent' | Select-Object -First 1
+    if (-not $sidebar -or -not $main) { throw 'Navigatiebalk of hoofdvlak ontbreekt.' }
+    if ($main.Left -lt $sidebar.Right) {
+        throw ('Hoofdvlak overlapt de navigatiebalk (main.Left={0}, sidebar.Right={1}).' -f $main.Left, $sidebar.Right)
+    }
+    if ($main.Width -le 0 -or $main.Right -gt $form.ClientSize.Width) {
+        throw 'Hoofdvlak valt buiten het zichtbare clientgebied.'
+    }
+    $form.Close()
 }.GetNewClosure())
 $timer.Start()
 Start-WPSApplication -RootPath $root
 $timer.Dispose()
-Write-Output 'Windows Forms-dashboard startte en sloot gecontroleerd.'
+Write-Output 'Windows Forms-dashboard startte, hoofdvlak staat naast de navigatiebalk en sloot gecontroleerd.'
