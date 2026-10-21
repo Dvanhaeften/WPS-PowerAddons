@@ -1,0 +1,17 @@
+{
+  "ApplicationId": "WPS.PowerAddons",
+  "ApplicationVersion": "1.0.0",
+  "Language": "nl-NL",
+  "Theme": "Light",
+  "DefaultView": "Cards",
+  "InstallScope": "Portable",
+  "LogRetentionDays": 30,
+  "ConfirmAdministratorTools": true,
+  "CheckCustomToolHashes": true,
+  "ShowDisabledTools": false,
+  "PreferredEditor": "notepad.exe",
+  "EnableToolTimeout": true,
+  "DefaultTimeoutSeconds": 300,
+  "FavouriteToolIds": ["copy-support-summary", "disk-space", "m365-connectivity"],
+  "RecentToolIds": []
+}

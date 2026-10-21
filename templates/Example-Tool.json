@@ -1,0 +1,20 @@
+{
+  "Id": "example-tool",
+  "Name": "Voorbeeldtool",
+  "Category": "Support",
+  "Description": "Een veilig voorbeeld voor een uitbreidbare WPS-PowerAddons-tool.",
+  "Script": "custom-tools\\example-tool\\Example-Tool.ps1",
+  "RequiresAdmin": false,
+  "RequiresConfirmation": false,
+  "SupportsReadOnlyMode": true,
+  "Enabled": true,
+  "Visible": true,
+  "Favourite": false,
+  "Version": "1.0.0",
+  "Author": "WPS",
+  "Source": "Custom",
+  "Tags": ["voorbeeld", "support"],
+  "RestartBehaviour": "None",
+  "TimeoutSeconds": 300,
+  "Sha256": ""
+}
