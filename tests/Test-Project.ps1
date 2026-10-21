@@ -38,7 +38,8 @@ foreach ($tool in $tools) {
     Assert-WPS ($tool.Script -notmatch '(^|[\\/])\.\.([\\/]|$)') ('Traversalsegment gevonden: {0}' -f $tool.Id)
     Assert-WPS ($tool.Script -notmatch '^[A-Za-z]:|^[/\\]') ('Absoluut scriptpad gevonden: {0}' -f $tool.Id)
 }
-Assert-WPS (@($tools).Count -ge 21) 'Niet alle initiële tools zijn geregistreerd.'
+Assert-WPS (@($tools).Count -ge 22) 'Niet alle ingebouwde tools zijn geregistreerd.'
+Assert-WPS (@($tools | Where-Object Id -eq 'powershell-command').Count -eq 1) 'PowerShell-opdrachttool ontbreekt of is dubbel geregistreerd.'
 
 . (Join-Path $root 'lib\Security.ps1')
 . (Join-Path $root 'lib\Validation.ps1')

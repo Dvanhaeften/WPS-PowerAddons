@@ -71,7 +71,7 @@ Tools worden in een apart PowerShell-proces uitgevoerd; de interface blijft besc
 | Categorie | Zonder administratorrechten | Administratorrechten vereist |
 | --- | --- | --- |
 | Netwerk | Netwerkdiagnose, DNS-configuratie controleren | DNS-cache wissen, Winsock resetten |
-| Support | Computerinformatie, supportoverzicht, gebruikersinformatie | — |
+| Support | Computerinformatie, supportoverzicht, gebruikersinformatie, PowerShell-opdracht uitvoeren | — |
 | Hardware | Batterijrapport, schijfruimte | — |
 | SAP | SAP-informatie, loglocaties, installer alleen ontdekken | SAP LocalGUI herstellen |
 | Microsoft 365 | Teams-/OneDrive-informatie, connectiviteit, OneDrive-reset, Teams-cache | — |
@@ -79,6 +79,14 @@ Tools worden in een apart PowerShell-proces uitgevoerd; de interface blijft besc
 | Windows | — | DISM ScanHealth, DISM RestoreHealth, SFC, Windows Update-services herstarten |
 
 OneDrive-reset en Teams-cachebeheer zijn wijzigingen onder het account van de gebruiker en vragen daarom geen administratorrechten. Ze vragen wel expliciete bevestiging. Teams wordt niet automatisch afgesloten; cache wordt niet gewist als Teams nog actief is. SAP LocalGUI-herstel sluit SAP/Excel niet automatisch, vraagt bevestiging na het tonen van het gevonden pad en start de installer alleen in een apart proces met een procesgebonden `ExecutionPolicy Bypass`. DISM/SFC-uitvoer wordt in het resultaatvenster getoond. Geen tool start automatisch een herstart.
+
+**PowerShell-opdracht uitvoeren** toont een invoervenster waarin u de opdracht kunt controleren en expliciet bevestigen. De opdracht draait in een apart PowerShell-proces met uw huidige gebruikersrechten; de app vraagt hiervoor geen UAC en slaat opdrachttekst noch uitvoer op in logs. Opdrachten kunnen wel gegevens wijzigen of verwijderen. Voer alleen opdrachten uit die u begrijpt en vertrouwt; interactieve opdrachten worden niet ondersteund.
+
+Voorbeeld van een alleen-lezenopdracht in de tool:
+
+```powershell
+Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion
+```
 
 ## Een nieuwe tool toevoegen
 

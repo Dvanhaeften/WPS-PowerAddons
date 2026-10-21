@@ -397,5 +397,24 @@
     "Tags": ["windows update", "service", "onderhoud"],
     "RestartBehaviour": "None",
     "TimeoutSeconds": 300
+  },
+  {
+    "Id": "powershell-command",
+    "Name": "PowerShell-opdracht uitvoeren",
+    "Category": "Support",
+    "Description": "Voert een door u ingevoerde PowerShell-opdracht uit onder uw huidige gebruikersaccount; controleer de opdracht zorgvuldig.",
+    "Script": "functions\\Support\\Invoke-PowerShellCommand.ps1",
+    "RequiresAdmin": false,
+    "RequiresConfirmation": true,
+    "SupportsReadOnlyMode": false,
+    "Enabled": true,
+    "Visible": true,
+    "Favourite": false,
+    "Version": "1.0.0",
+    "Author": "WPS",
+    "Source": "BuiltIn",
+    "Tags": ["powershell", "opdracht", "command", "console"],
+    "RestartBehaviour": "None",
+    "TimeoutSeconds": 300
   }
 ]
